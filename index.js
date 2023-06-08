@@ -35,6 +35,7 @@ const client = new MongoClient(uri, {
       // Connect the client to the server	(optional starting in v4.7)
       //await client.connect();
       const usersCollection = client.db('dance-flow').collection('users');
+      const classCollection = client.db('dance-flow').collection('classes');
 
 
       //generate jwt token
@@ -57,6 +58,19 @@ const client = new MongoClient(uri, {
         const result = await usersCollection.insertOne(user);
         res.send(result);
       });
+
+      //save course details
+      app.post('/classdetail', async(req,res)=>{
+        const classDetail = req.body;
+        const result = await classCollection.insertOne(classDetail);
+        res.send(result);
+
+      })
+      //get course details
+      app.get('/classinfo', async(req,res)=>{
+        const classInfo = await classCollection.find().toArray()
+        res.send(classInfo)
+      })
 
 
 
