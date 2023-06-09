@@ -46,18 +46,44 @@ async function run() {
     })
 
     //save user email in mongodb when user is created in client side
-    app.post('/users', async (req, res) => {
-      const user = req.body;
-      const query = { email: user.email }
-      const existingUser = await usersCollection.findOne(query);
-
-      if (existingUser) {
-        return res.send({ message: 'user already exists' })
+    app.put('/users/:email', async (req, res) => {
+      const email = req.params.email
+      const user = req.body
+      const query = { email: email }
+      const options = { upsert: true }
+      const updateDoc = {
+        $set: user,
       }
+      const result = await usersCollection.updateOne(query, updateDoc, options)
+      res.send(result)
+    })
 
-      const result = await usersCollection.insertOne(user);
-      res.send(result);
-    });
+    // Get user
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email
+      const query = { email: email }
+      const result = await usersCollection.findOne(query)
+      res.send(result)
+    })
+    app.get('/allusers',async(req,res)=>{
+      const usersInfo = await usersCollection.find().toArray()
+      res.send(usersInfo)
+    })
+
+
+
+    // app.post('/users', async (req, res) => {
+    //   const user = req.body;
+    //   const query = { email: user.email }
+    //   const existingUser = await usersCollection.findOne(query);
+
+    //   if (existingUser) {
+    //     return res.send({ message: 'user already exists' })
+    //   }
+
+    //   const result = await usersCollection.insertOne(user);
+    //   res.send(result);
+    // });
 
     //save course details
     app.post('/classdetail', async (req, res) => {
@@ -72,7 +98,7 @@ async function run() {
       res.send(classInfo)
     })
     //update a single class information
-    app.put('/updateclass/:id',async (req, res) => {
+    app.put('/updateclass/:id', async (req, res) => {
       const id = req.params.id;
       const classInfo = req.body;
       console.log(classInfo)
@@ -81,7 +107,7 @@ async function run() {
       const updateClassInfo = {
         $set: {
           price: classInfo.price,
-          availableSeats: classInfo.availableSeats, 
+          availableSeats: classInfo.availableSeats,
         }
       }
       const result = await classCollection.updateOne(filter, updateClassInfo, options);
