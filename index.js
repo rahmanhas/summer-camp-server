@@ -101,7 +101,7 @@ async function run() {
     app.put('/updateclass/:id', async (req, res) => {
       const id = req.params.id;
       const classInfo = req.body;
-      console.log(classInfo)
+      //console.log(classInfo)
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateClassInfo = {
@@ -112,6 +112,34 @@ async function run() {
       }
       const result = await classCollection.updateOne(filter, updateClassInfo, options);
       res.send(result);
+    })
+    // update clase status
+    app.put('/classdata/:id', async (req, res) => {
+      const id = req.params.id;
+      const classData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true }
+      const updateDoc = {
+        $set: {
+          status: classData.status
+        }
+      }
+      const result = await classCollection.updateOne(filter, updateDoc, options)
+      res.send(result)
+    })
+    // update class feedback
+    app.put('/classfeedback/:id', async (req, res) => {
+      const id = req.params.id;
+      const classData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true }
+      const updateDoc = {
+        $set: {
+          feedback: classData.feedback
+        }
+      }
+      const result = await classCollection.updateOne(filter, updateDoc, options)
+      res.send(result)
     })
 
 
