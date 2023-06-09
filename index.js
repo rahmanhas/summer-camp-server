@@ -58,11 +58,12 @@ async function run() {
       res.send(result)
     })
 
-    // Get user
+    // Get a user
     app.get('/users/:email', async (req, res) => {
       const email = req.params.email
       const query = { email: email }
       const result = await usersCollection.findOne(query)
+      console.log(result);
       res.send(result)
     })
     app.get('/allusers',async(req,res)=>{
