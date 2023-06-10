@@ -45,7 +45,6 @@ async function run() {
     const usersCollection = client.db('dance-flow').collection('users');
     const classCollection = client.db('dance-flow').collection('classes');
 
-
     //generate jwt token
     app.post('/jwt', async (req, res) => {
       const email = req.body;
@@ -76,25 +75,10 @@ async function run() {
       
       res.send(result)
     })
-    app.get('/allusers',verifyJWT,async(req,res)=>{
+    app.get('/allusers',async(req,res)=>{
       const usersInfo = await usersCollection.find().toArray()
       res.send(usersInfo)
     })
-
-
-
-    // app.post('/users', async (req, res) => {
-    //   const user = req.body;
-    //   const query = { email: user.email }
-    //   const existingUser = await usersCollection.findOne(query);
-
-    //   if (existingUser) {
-    //     return res.send({ message: 'user already exists' })
-    //   }
-
-    //   const result = await usersCollection.insertOne(user);
-    //   res.send(result);
-    // });
 
     //save course details
     app.post('/classdetail',verifyJWT, async (req, res) => {
@@ -107,6 +91,11 @@ async function run() {
     app.get('/classinfo',verifyJWT, async (req, res) => {
       const classInfo = await classCollection.find().toArray()
       res.send(classInfo)
+    })
+    // class page 
+    app.get('/classpage', async (req, res) => {
+      const classPage = await classCollection.find().toArray()
+      res.send(classPage)
     })
     //get course for seperate instructors
     app.get('/classdetails/:email',verifyJWT, async (req, res) => {
