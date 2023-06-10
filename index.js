@@ -22,12 +22,20 @@ const client = new MongoClient(uri, {
 //verify jwt from client to server
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
-  console.log(authorization);
+  if(!authorization){
+    return res.status(401).send({error: true,message: 'Unauthorized Access'})
+  }
+  const token = authorization.split(' ')[1]
+  console.log(token);
   //token verify
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+    if(err){
+      return res.status(401).send({error: true,message: 'Unauthorized Access'})
+    }
+    req.decoded= decoded
+    next()
+  })
 
-
-
-  next()
 }
 
 async function run() {
@@ -41,7 +49,9 @@ async function run() {
     //generate jwt token
     app.post('/jwt', async (req, res) => {
       const email = req.body;
-      const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d', })
+      const token = jwt.sign(email, process.env.
+      ACCESS_TOKEN_SECRET, { expiresIn: '7d', })
+      console.log(token);
       res.send({ token })
     })
 
@@ -63,10 +73,10 @@ async function run() {
       const email = req.params.email
       const query = { email: email }
       const result = await usersCollection.findOne(query)
-      console.log(result);
+      
       res.send(result)
     })
-    app.get('/allusers',async(req,res)=>{
+    app.get('/allusers',verifyJWT,async(req,res)=>{
       const usersInfo = await usersCollection.find().toArray()
       res.send(usersInfo)
     })
@@ -87,22 +97,31 @@ async function run() {
     // });
 
     //save course details
-    app.post('/classdetail', async (req, res) => {
+    app.post('/classdetail',verifyJWT, async (req, res) => {
       const classDetail = req.body;
       const result = await classCollection.insertOne(classDetail);
       res.send(result);
 
     })
     //get course details
-    app.get('/classinfo', async (req, res) => {
+    app.get('/classinfo',verifyJWT, async (req, res) => {
       const classInfo = await classCollection.find().toArray()
       res.send(classInfo)
     })
+    //get course for seperate instructors
+    app.get('/classdetails/:email',verifyJWT, async (req, res) => {
+     const decodedEmail = req.decoded.email;
+      console.log(decodedEmail);
+      const email = req.params.email;
+      if(email!==decodedEmail){return res.status(403).send({error: true,message: 'Forbidden Access'})}
+      const query ={'instructorEmail': email}
+      const classDetails = await classCollection.find(query).toArray()
+      res.send(classDetails)
+    })
     //update a single class information
-    app.put('/updateclass/:id', async (req, res) => {
+    app.put('/updateclass/:id', verifyJWT, async (req, res) => {
       const id = req.params.id;
       const classInfo = req.body;
-      //console.log(classInfo)
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateClassInfo = {
@@ -115,7 +134,7 @@ async function run() {
       res.send(result);
     })
     // update clase status
-    app.put('/classdata/:id', async (req, res) => {
+    app.put('/classdata/:id',verifyJWT, async (req, res) => {
       const id = req.params.id;
       const classData = req.body;
       const filter = { _id: new ObjectId(id) };
