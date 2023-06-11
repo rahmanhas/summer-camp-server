@@ -26,7 +26,7 @@ const verifyJWT = (req, res, next) => {
     return res.status(401).send({error: true,message: 'Unauthorized Access'})
   }
   const token = authorization.split(' ')[1]
-  console.log(token);
+  //console.log(token);
   //token verify
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
     if(err){
@@ -50,7 +50,7 @@ async function run() {
       const email = req.body;
       const token = jwt.sign(email, process.env.
       ACCESS_TOKEN_SECRET, { expiresIn: '7d', })
-      console.log(token);
+      //console.log(token);
       res.send({ token })
     })
 
@@ -62,6 +62,19 @@ async function run() {
       const options = { upsert: true }
       const updateDoc = {
         $set: user,
+      }
+      const result = await usersCollection.updateOne(query, updateDoc, options)
+      res.send(result)
+    })
+    //save users selected course in mongodb when user is created in client side
+    app.put('/coursesinfo/:email', async (req, res) => {
+      const email = req.params.email
+      const courseId = req.body.courseId;
+      console.log(courseId);
+      const query = { email: email }
+      const options = { upsert: true }
+      const updateDoc = {
+        $addToSet: { courseIds: courseId },
       }
       const result = await usersCollection.updateOne(query, updateDoc, options)
       res.send(result)
@@ -100,7 +113,7 @@ async function run() {
     //get course for seperate instructors
     app.get('/classdetails/:email',verifyJWT, async (req, res) => {
      const decodedEmail = req.decoded.email;
-      console.log(decodedEmail);
+      //console.log(decodedEmail);
       const email = req.params.email;
       if(email!==decodedEmail){return res.status(403).send({error: true,message: 'Forbidden Access'})}
       const query ={'instructorEmail': email}
