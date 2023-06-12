@@ -70,7 +70,7 @@ async function run() {
     app.put('/coursesinfo/:email', async (req, res) => {
       const email = req.params.email
       const courseId = req.body.courseId;
-      console.log(courseId);
+      //console.log(courseId);
       const query = { email: email }
       const options = { upsert: true }
       const updateDoc = {
@@ -79,6 +79,75 @@ async function run() {
       const result = await usersCollection.updateOne(query, updateDoc, options)
       res.send(result)
     })
+
+    //remove users selected ID from user courseIds
+    app.put('/coursesinforemove/:email', async (req, res) => {
+      const email = req.params.email;
+      const courseId = req.body.courseId;
+      const query = { email: email };
+      const updateDoc = {
+        $pull: { courseIds: courseId },
+      };
+      const result = await usersCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    //paid course info update in user
+    app.put('/paidcoursesinfo/:email', async (req, res) => {
+      const email = req.params.email
+      const courseId = req.body.courseId;
+      //console.log(courseId);
+      const query = { email: email }
+      const options = { upsert: true }
+      const updateDoc = {
+        $addToSet: { paidCourseIds: courseId },
+      }
+      const result = await usersCollection.updateOne(query, updateDoc, options)
+      res.send(result)
+    })
+    //paid course info update in course
+    app.put('/paidcoursesinfoinclasses/:email', async (req, res) => {
+      const email = req.params.email;
+      const studentId = req.body.studentId;
+    
+      const query = { instructorEmail: email };
+      const options = { upsert: true };
+    
+      // Find the current class document
+      const classDocument = await classCollection.findOne(query);
+    
+      if (!classDocument) {
+        res.status(404).send('Class not found');
+        return;
+      }
+    
+      // Get the current availableSeats value
+      const currentAvailableSeats = Number(classDocument.availableSeats);
+    
+      // Check if availableSeats is a valid number
+      if (isNaN(currentAvailableSeats)) {
+        res.status(500).send('Invalid availableSeats value');
+        return;
+      }
+    
+      // Decrease the availableSeats value by 1
+      const updatedAvailableSeats = currentAvailableSeats - 1;
+    
+      // Check if the updated availableSeats value is greater than or equal to 0
+      if (updatedAvailableSeats < 0) {
+        res.status(400).send('No available seats');
+        return;
+      }
+    
+      const updateDoc = {
+        $set: { availableSeats: updatedAvailableSeats.toString() },
+        $push: { studentIds: studentId }
+      };
+    
+      const result = await classCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+    
+
 
     // Get a user
     app.get('/users/:email', async (req, res) => {
@@ -105,6 +174,13 @@ async function run() {
       const classInfo = await classCollection.find().toArray()
       res.send(classInfo)
     })
+    //get all instructors
+    app.get('/instructors',verifyJWT, async (req, res) => {
+      const query ={'role': 'instructor'}
+      const instructors = await usersCollection.find(query).limit(6).toArray()
+     // console.log(instructors);
+      res.send(instructors)
+    })
     // class page 
     app.get('/classpage', async (req, res) => {
       const classPage = await classCollection.find().toArray()
@@ -118,6 +194,16 @@ async function run() {
       if(email!==decodedEmail){return res.status(403).send({error: true,message: 'Forbidden Access'})}
       const query ={'instructorEmail': email}
       const classDetails = await classCollection.find(query).toArray()
+      res.send(classDetails)
+    })
+    //get course details for seperate based on course Id
+    app.get('/studentcoursedetails/:email',verifyJWT, async (req, res) => {
+     const decodedEmail = req.decoded.email;
+      //console.log(decodedEmail);
+      const email = req.params.email;
+      if(email!==decodedEmail){return res.status(403).send({error: true,message: 'Forbidden Access'})}
+      //const query ={'instructorEmail': email}
+      const classDetails = await classCollection.find().toArray()
       res.send(classDetails)
     })
     //update a single class information
