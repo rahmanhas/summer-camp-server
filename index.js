@@ -175,7 +175,7 @@ async function run() {
       res.send(classInfo)
     })
     //get all instructors
-    app.get('/instructors',verifyJWT, async (req, res) => {
+    app.get('/instructors', async (req, res) => {
       const query ={'role': 'instructor'}
       const instructors = await usersCollection.find(query).limit(6).toArray()
      // console.log(instructors);
